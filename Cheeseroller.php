@@ -8,6 +8,8 @@ $jackpot = 5000 //This number will count down by 30 for each second that the che
 $distance = 120 //The total distance of the slope. This number reduces by 10 each turn, making the game 12 turns long. 
 $time = 0 //This number increases by randomized values each turn. Cheese is awarded for reaching the bottom in 60 seconds or fewer. 
 $user_cheese = "" //Stores the type of cheese the user picked, the price of which will be used in the score calculations. 
+$price = "" //The price of the $user_cheese
+$score = 0 //Game score.
 
 ?>
 
@@ -34,6 +36,8 @@ $user_cheese = $_POST["cheese"];
  $cheeseItem = Item::findBy(['name' => $user_cheese, 'type' => 'cheese']); 
   if (!$cheeseItem) {
 	echo "Sorry, I don't have a cheese with that name.";
+} else {
+	echo "You have chosen ${user_Cheese}! Let's get rolling!";
 }
 
 ?>
@@ -64,7 +68,8 @@ $user_cheese = $_POST["cheese"];
 
 </center>
 
-<!-- This style of form I got from Neopets, and I was confused about how to get the $action function to recognize these values, but I should actually be able to just use the option strings instead, right?
+<!-- 
+This style of form I got from Neopets, and I was confused about how to get the $action function to recognize these values, but I should actually be able to just use the option strings instead, right?
 
 <form action='cheeseroller.php' method='post'>
 <select name='choice'>
@@ -74,6 +79,15 @@ $user_cheese = $_POST["cheese"];
 <option value='4'>Dive Left
 <option value='5'>Dive Right
 </select>
+
+<select name="options"> 
+    <?php 
+    $options = $db->query("SELECT * FROM options_table"); 
+    while($option = $options->fetch_assoc()){ 
+      echo "<option value='".$option['id']."'>".$option['value']."</option>"; 
+    } 
+    ?> 
+</select> 
 -->
 
 
@@ -136,8 +150,51 @@ $results = array(
 //This should print the flavor text to the page. 
 echo "You roll your cheese ".$results[$roll][1];
 
-//This will be used for the mathy part. 
-$results[$roll][0]
+//This will be used for the mathy part... it's printing right now but that's for testing purposes.
+//It searches the $results array for the number that was ${roll}ed and returns the first[0] "column". 
+echo $results[$roll][0];
 
-function math()
+/*
+REMINDER
+$distance = 120 // -10 each turn
+
+$time = 0 // + randomized values each turn.
+
+$jackpot = 5000 // -30 each second of $time. 
+
+$user_cheese = "" //Stores the type of cheese the user picked, the price of which will be used in the score calculations. 
+$price = "" //The price of the $user_cheese
+*/
+
+function turnDistance() {
+	$distance = $distance + 10;
+	return $distance;
+}
+
+function turnTime() {
+	$time = $time + $results[$roll][0];
+	return $time;
+}
+
+function turnJackpot() {
+	$jackpot = $jackpot - ($results[$roll][0] * 30);
+	return $jackpot;
+}
+
+function turnScore() {
+	$score = $score + ($price * 0.01);
+	return $score;
+}
+
 ?>
+
+<!-- 
+Printing again to make sure it's working. 
+-->
+
+<center>
+	<p><b>DISTANCE TO FINISH LINE:</b> <? echo "${distance}m" ?>
+	<br><b>TIME TAKEN:</b> <? echo "${time}s" ?> 
+	<br><b>JACKPOT:</b> <? echo "${jackpot}lps" ?>
+	<br><b>SCORE:</b> <? echo "${score}pts" ?>
+</center>
