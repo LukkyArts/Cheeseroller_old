@@ -4,12 +4,11 @@
 
 //This file will likely flip-flop between the PHP sections and the HTML to help me keep track of the chronology of the game.
 
-$jackpot = 5000 //This number will count down by 30 for each second that the cheese takes.
+$jackpot = 5000 //This number will count down by 30 for each second that the cheese takes, is also game score.
 $distance = 120 //The total distance of the slope. This number reduces by 10 each turn, making the game 12 turns long. 
 $time = 0 //This number increases by randomized values each turn. Cheese is awarded for reaching the bottom in 60 seconds or fewer. 
 $user_cheese = "" //Stores the type of cheese the user picked, the price of which will be used in the score calculations. 
 $price = "" //The price of the $user_cheese
-$score = 0 //Game score.
 
 ?>
 
@@ -39,6 +38,54 @@ $user_cheese = $_POST["cheese"];
 } else {
 	echo "You have chosen ${user_Cheese}! Let's get rolling!";
 }
+
+
+
+
+
+/*
+
+Take the price of the chosen cheese, round down to nearest 1000, and add the applicable time penalty/score bonus. 
+
+Example: 
+< $1k = -2s
+$1k+ = -1s
+$2k+ = 0s
+$3k+ = +1s 
+$4k+ = +2s
+$5k+ = +3s - My concern here is that the more expensive cheeses would be nearly impossible to win with. You want an average of 5 seconds each turn and if they're getting a 3 second penalty every turn they need to roll less than 2 every turn. There are 4/20 results that are 2 or less. That's 20% in theory but it feels unfair. This is something that could be tweeked for balance after testing though. 
+
+*/
+
+function calculateBonus($price) {
+	switch ($price) {
+		case >= 5000:
+		$bonus = 50; //Jackpot bonus
+		$penalty = 3; //Time penalty
+		break;
+	case >= 4000:
+		$bonus = 40;
+		$penalty = 2;
+		break;
+	case >= 3000:
+		$bonus = 30;
+		$penalty = 1;
+		break;
+	case >= 2000:
+		$bonus = 20;
+		$penalty = 0;
+		break;
+	case >= 1000:
+		$bonus = 10;
+		$penalty = -1;
+		break;
+	default:
+		$bonus = 0;
+		$penalty = -2;
+		break;
+	}
+}
+
 
 ?>
 
@@ -99,17 +146,14 @@ function action($choice) {
 			return $roll;
 
         } elseif ($choice = "Push Cheese Faster") {
-            //Random number between 5 and 9
 			$roll = rand(4, 8);
             return $roll;
 			
         } elseif ($choice = "Hold Cheese Steady") {
-            //Random number between 9 and 13
 			$roll = rand(8, 12);
             return $roll;
 			
         } elseif ($choice = "Dive Left") {
-            //Random number between 13 and 17
 			$roll = rand(12, 16);
 			return $roll;
 			
@@ -155,35 +199,37 @@ echo "You roll your cheese ".$results[$roll][1];
 echo $results[$roll][0];
 
 /*
+
 REMINDER
-$distance = 120 // -10 each turn
 
-$time = 0 // + randomized values each turn.
+$distance = -10 each turn
 
-$jackpot = 5000 // -30 each second of $time. 
+$time = + $roll each turn
 
-$user_cheese = "" //Stores the type of cheese the user picked, the price of which will be used in the score calculations. 
-$price = "" //The price of the $user_cheese
+$jackpot = -30 each second of $time
+
+$user_cheese = "" awarded to inventory if $time < 60s
+
+$price = "" //The price of $user_cheese
 */
 
-function turnDistance() {
+
+
+
+
+function turnDistance($distance) {
 	$distance = $distance + 10;
 	return $distance;
 }
 
-function turnTime() {
-	$time = $time + $results[$roll][0];
+function turnTime($time) {
+	$time = $time + $results[$roll][0] + $penalty;
 	return $time;
 }
 
-function turnJackpot() {
-	$jackpot = $jackpot - ($results[$roll][0] * 30);
+function turnJackpot($jackpot) {
+	$jackpot = $jackpot - ($results[$roll][0] * 30) + $bonus;
 	return $jackpot;
-}
-
-function turnScore() {
-	$score = $score + ($price * 0.01);
-	return $score;
 }
 
 ?>
@@ -196,5 +242,4 @@ Printing again to make sure it's working.
 	<p><b>DISTANCE TO FINISH LINE:</b> <? echo "${distance}m" ?>
 	<br><b>TIME TAKEN:</b> <? echo "${time}s" ?> 
 	<br><b>JACKPOT:</b> <? echo "${jackpot}lps" ?>
-	<br><b>SCORE:</b> <? echo "${score}pts" ?>
 </center>
